@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MailShieldAI — Email Scanner</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+.kw-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.kw{padding:3px 9px;border-radius:7px;font-size:10px;background:rgba(255,45,85,0.08);border:1px solid rgba(255,45,85,0.18);color:var(--red);}
+.formula{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--t2);}
+.fval{padding:3px 10px;border-radius:7px;font-weight:700;font-size:12px;}
+.fval.b{background:rgba(0,212,255,0.1);color:var(--blue);border:1px solid rgba(0,212,255,0.2);}
+.fval.r{background:rgba(255,45,85,0.1);color:var(--red);border:1px solid rgba(255,45,85,0.2);}
+.fval.y{background:rgba(255,196,0,0.1);color:var(--yellow);border:1px solid rgba(255,196,0,0.2);}
+.sample-btn{display:flex;align-items:center;gap:10px;padding:11px 15px;border-radius:10px;margin-bottom:8px;width:100%;background:rgba(0,212,255,0.02);border:1px solid var(--bdr);color:var(--t2);font-size:12px;text-align:left;transition:all .2s var(--ease);cursor:pointer;}
+.sample-btn:hover{border-color:rgba(0,212,255,0.2);transform:translateX(4px);color:var(--t1);}
+.sample-info{line-height:1.3;}
+.sample-lbl{font-family:var(--fd);font-size:12px;font-weight:700;}
+.sample-sub{font-size:10px;color:var(--t3);}
+@media(max-width:1000px){.scan-shell{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<script src="script.js"></script>
+<script>injectBg();</script>
+<div class="topbar">
+  <div class="tb-logo"><div class="tb-mark">🛡️</div><div class="tb-text">Mail<em>Shield</em>AI</div></div>
+  <div class="tb-sep"></div>
+  <div class="tb-pill"><div class="live-dot"></div>THREAT INTEL LIVE</div>
+  <div class="tb-spacer"></div>
+  <div class="tb-clock" id="tbClock">--:--:--</div>
+  <div class="tb-user"><div class="tb-avatar" id="tbAvatar">A</div><span id="tbName">Analyst</span></div>
+  <button class="tb-logout" onclick="logout()">⏻ LOGOUT</button>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-label">Navigation</div>
+    <a class="nav-link" data-p="dashboard" href="dashboard.html"><span class="ni">📊</span>Dashboard</a>
+    <a class="nav-link active" data-p="scan" href="scan.html"><span class="ni">🔍</span>Email Scanner</a>
+    <a class="nav-link" data-p="result" href="result.html"><span class="ni">🎯</span>Last Result</a>
+    <a class="nav-link" data-p="history" href="history.html"><span class="ni">📋</span>Scan History<span class="nbadge" id="hBadge">0</span></a>
+    <div class="sb-label" style="margin-top:24px">System</div>
+    <a class="nav-link" href="#" onclick="toast('Settings — coming soon','info')"><span class="ni">⚙️</span>Settings</a>
+    <div class="sb-stats">
+      <div class="sb-stats-hdr">// Session Stats</div>
+      <div class="sb-chip s"><div class="sb-chip-lbl"><div class="sb-dot"></div>Safe</div><div class="sb-chip-val" id="ss-safe">0</div></div>
+      <div class="sb-chip y"><div class="sb-chip-lbl"><div class="sb-dot"></div>Suspicious</div><div class="sb-chip-val" id="ss-susp">0</div></div>
+      <div class="sb-chip r"><div class="sb-chip-lbl"><div class="sb-dot"></div>Phishing</div><div class="sb-chip-val" id="ss-phish">0</div></div>
+    </div>
+    <div class="sb-sys">
+      <div class="sb-sys-row"><span>Engine</span><span>CNN v2.4</span></div>
+      <div class="sb-sys-row"><span>Uptime</span><span id="uptime">00:00</span></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="pg-hdr fi">
+      <div class="pg-eye">Threat Analysis</div>
+      <div class="pg-title">Email <em>Scanner</em></div>
+      <div class="pg-sub">Paste raw email content or upload .eml / .txt — AI + rule engine analyzes instantly</div>
+    </div>
+    <div class="scan-shell">
+      <div class="fi1">
+        <div class="card">
+          <div class="card-accent"></div>
+          <div class="card-head"><div class="card-head-l"><div class="cdot"></div><div class="card-title">Email Content</div></div><div class="card-meta">PLAIN TEXT / HEADERS</div></div>
+          <div class="card-body">
+            <textarea class="inp" id="emailInput" placeholder="Paste email content here...&#10;&#10;From: security@paypa1-secure.xyz&#10;Subject: URGENT: Verify your account immediately&#10;&#10;Dear Customer, unusual activity detected. Verify here: http://bit.ly/verify-now"></textarea>
+            <div class="char-row"><span id="charCount" style="color:var(--t3)">0 characters</span><span id="lineCount" style="color:var(--t3)">0 lines</span></div>
+            <div class="dropzone" id="dropzone" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="handleDrop(event)" onclick="document.getElementById('fileInput').click()">
+              <div class="dz-icon">📂</div>
+              <div class="dz-text"><span>Click to upload</span> or drag & drop file</div>
+              <div class="dz-sub">.eml · .txt · .msg — max 2 MB</div>
+            </div>
+            <input type="file" id="fileInput" accept=".eml,.txt,.msg" style="display:none" onchange="handleFile(event)"/>
+            <div class="scan-actions">
+              <button class="btn btn-blue" id="scanBtn" onclick="startScan()">🛡️ Analyze Email</button>
+              <button class="btn btn-ghost btn-sm" onclick="clearEmail()" style="width:auto;padding:13px 20px">✕ Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fi2" style="display:flex;flex-direction:column;gap:16px;">
+        <div class="card">
+          <div class="card-accent r"></div>
+          <div class="card-head"><div class="card-head-l"><div class="cdot r"></div><div class="card-title">Detection Engine</div></div><div class="card-badge">ACTIVE</div></div>
+          <div class="card-body">
+            <div class="tip"><div class="tip-title">🧠 CNN Model</div><div class="tip-body">TF/Keras — max_len=100 tokenizer predicts phishing probability 0→1 via <code style="color:var(--blue)">model.predict()</code>.</div></div>
+            <div class="tip"><div class="tip-title">🔗 URL Forensics</div><div class="tip-body">Flags <code style="color:var(--yellow)">bit.ly</code>, <code style="color:var(--yellow)">.xyz</code>, <code style="color:var(--yellow)">.ru</code>, IP-based URLs, and <code style="color:var(--yellow)">login/verify</code> in domain.</div></div>
+            <div class="tip"><div class="tip-title">🔑 Keyword Scan</div><div class="tip-body">Matches 30+ phishing vocabulary items:</div><div class="kw-chips"><span class="kw">urgent</span><span class="kw">click here</span><span class="kw">verify account</span><span class="kw">password</span><span class="kw">bank</span><span class="kw">free</span><span class="kw">win</span><span class="kw">limited time</span></div></div>
+            <div class="tip"><div class="tip-title">⚖️ Risk Formula</div><div class="formula"><div class="fval b">AI +3</div><span>+</span><div class="fval r">URLs +3</div><span>+</span><div class="fval y">Keywords</div></div><div style="font-size:10px;color:var(--t3);margin-top:8px">≥5 → Phishing · ≥3 → Suspicious · &lt;3 → Safe</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-accent"></div>
+          <div class="card-head"><div class="card-head-l"><div class="cdot y"></div><div class="card-title">Live Threat Indicators</div></div></div>
+          <div class="card-body">
+            <div class="tib-row"><div class="tib-hdr"><span>🔗 URL Risk</span><span style="color:var(--red)" id="tib-url-val">65%</span></div><div class="tib-track"><div class="tib-fill r" id="tib-url-bar" style="width:65%"></div></div></div>
+            <div class="tib-row"><div class="tib-hdr"><span>🔑 Keyword Score</span><span style="color:var(--yellow)" id="tib-kw-val">42%</span></div><div class="tib-track"><div class="tib-fill y" id="tib-kw-bar" style="width:42%"></div></div></div>
+            <div class="tib-row"><div class="tib-hdr"><span>📨 Header Trust</span><span style="color:var(--green)" id="tib-hdr-val">78%</span></div><div class="tib-track"><div class="tib-fill g" id="tib-hdr-bar" style="width:78%"></div></div></div>
+            <div class="tib-row"><div class="tib-hdr"><span>🧠 AI Confidence</span><span style="color:var(--blue)" id="tib-ai-val">55%</span></div><div class="tib-track"><div class="tib-fill" style="background:var(--blue);height:100%;border-radius:2px;box-shadow:0 0 8px var(--blue);width:55%;transition:width 1.2s" id="tib-ai-bar"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-accent g"></div>
+          <div class="card-head"><div class="card-head-l"><div class="cdot g"></div><div class="card-title">Sample Emails</div></div></div>
+          <div class="card-body">
+            <button class="sample-btn" onclick="loadSampleEmail('phishing')">🚨 <div class="sample-info"><div class="sample-lbl" style="color:var(--red)">Phishing Sample</div><div class="sample-sub">Credential harvesting pattern</div></div></button>
+            <button class="sample-btn" onclick="loadSampleEmail('safe')">✅ <div class="sample-info"><div class="sample-lbl" style="color:var(--green)">Legitimate Email</div><div class="sample-sub">Normal business communication</div></div></button>
+            <button class="sample-btn" onclick="loadSampleEmail('spam')">⚠️ <div class="sample-info"><div class="sample-lbl" style="color:var(--yellow)">Spam Sample</div><div class="sample-sub">Prize/promotional content</div></div></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="scan-overlay" id="scanOverlay">
+  <div class="so-rings"><div class="so-r r1"></div><div class="so-r r2"></div><div class="so-r r3"></div><div class="so-r r4"></div><div class="so-icon">🛡️</div></div>
+  <div class="so-title">Analyzing Threat Profile</div>
+  <div class="so-sub">// Neural Network Processing</div>
+  <div class="so-bar-wrap"><div class="so-bar-track"><div class="so-bar-fill" id="soFill"></div></div></div>
+  <div class="so-log" id="soLog">Initializing CNN engine...</div>
+  <div class="so-terminal" id="soTerminal"></div>
+</div>
+<script>
+/* ── Page init ── */
+const user = requireAuth();
+initTopbar(user, 'scan');
+renderSideStats(user.id);
+startJitter();
+
+/* ── Textarea counters ── */
+const ta = document.getElementById('emailInput');
+ta.addEventListener('input', () => {
+  document.getElementById('charCount').textContent = ta.value.length + ' characters';
+  document.getElementById('lineCount').textContent = ta.value.split('\n').length + ' lines';
+});
+
+/* ── File upload ── */
+function handleFile(e) {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 2 * 1024 * 1024) { toast('File too large (max 2 MB)', 'error'); return; }
+  const r = new FileReader();
+  r.onload = ev => { ta.value = ev.target.result; ta.dispatchEvent(new Event('input')); toast(`Loaded: ${f.name}`, 'success'); };
+  r.readAsText(f); e.target.value = '';
+}
+
+/* ── Drag & drop ── */
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('over');
+  const f = e.dataTransfer.files[0]; if (f) handleFile({ target: { files: [f] } });
+}
+
+/* ── Clear ── */
+function clearEmail() {
+  ta.value = '';
+  document.getElementById('charCount').textContent = '0 characters';
+  document.getElementById('lineCount').textContent = '0 lines';
+}
+
+/* ── Sample loader ── */
+function loadSampleEmail(type) {
+  ta.value = SAMPLES[type];
+  ta.dispatchEvent(new Event('input'));
+  toast(`${type} sample loaded`, 'info');
+}
+
+/* NOTE: startScan() is defined in script.js — do NOT redefine here */
+</script>
+</body>
+</html>

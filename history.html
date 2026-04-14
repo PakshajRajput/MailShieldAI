@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MailShieldAI — Scan History</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+.h-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.h-scard{padding:16px 20px;border-radius:14px;border:1px solid var(--bdr);background:var(--glass);backdrop-filter:blur(16px);transition:all .25s var(--ease);position:relative;overflow:hidden;}
+.h-scard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.h-scard.b::before{background:linear-gradient(90deg,var(--blue),transparent);}
+.h-scard.g::before{background:linear-gradient(90deg,var(--green),transparent);}
+.h-scard.y::before{background:linear-gradient(90deg,var(--yellow),transparent);}
+.h-scard.r::before{background:linear-gradient(90deg,var(--red),transparent);}
+.h-scard:hover{transform:translateY(-2px);}
+.h-scard.b:hover{box-shadow:var(--glow-b);}
+.h-scard.g:hover{box-shadow:var(--glow-g);}
+.h-scard.y:hover{box-shadow:var(--glow-y);}
+.h-scard.r:hover{box-shadow:var(--glow-r);}
+.h-scard-val{font-family:var(--fd);font-size:28px;font-weight:900;line-height:1;margin-bottom:3px;}
+.h-scard.b .h-scard-val{color:var(--blue);}
+.h-scard.g .h-scard-val{color:var(--green);}
+.h-scard.y .h-scard-val{color:var(--yellow);}
+.h-scard.r .h-scard-val{color:var(--red);}
+.h-scard-lbl{font-size:11px;color:var(--t2);}
+@media(max-width:800px){.h-stat-row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<script src="script.js"></script>
+<script>injectBg();</script>
+<div class="topbar">
+  <div class="tb-logo"><div class="tb-mark">🛡️</div><div class="tb-text">Mail<em>Shield</em>AI</div></div>
+  <div class="tb-sep"></div>
+  <div class="tb-pill"><div class="live-dot"></div>THREAT INTEL LIVE</div>
+  <div class="tb-spacer"></div>
+  <div class="tb-clock" id="tbClock">--:--:--</div>
+  <div class="tb-user"><div class="tb-avatar" id="tbAvatar">A</div><span id="tbName">Analyst</span></div>
+  <button class="tb-logout" onclick="logout()">⏻ LOGOUT</button>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-label">Navigation</div>
+    <a class="nav-link" data-p="dashboard" href="dashboard.html"><span class="ni">📊</span>Dashboard</a>
+    <a class="nav-link" data-p="scan" href="scan.html"><span class="ni">🔍</span>Email Scanner</a>
+    <a class="nav-link" data-p="result" href="result.html"><span class="ni">🎯</span>Last Result</a>
+    <a class="nav-link active" data-p="history" href="history.html"><span class="ni">📋</span>Scan History<span class="nbadge" id="hBadge">0</span></a>
+    <div class="sb-label" style="margin-top:24px">System</div>
+    <a class="nav-link" href="#"><span class="ni">⚙️</span>Settings</a>
+    <div class="sb-stats">
+      <div class="sb-stats-hdr">// Session Stats</div>
+      <div class="sb-chip s"><div class="sb-chip-lbl"><div class="sb-dot"></div>Safe</div><div class="sb-chip-val" id="ss-safe">0</div></div>
+      <div class="sb-chip y"><div class="sb-chip-lbl"><div class="sb-dot"></div>Suspicious</div><div class="sb-chip-val" id="ss-susp">0</div></div>
+      <div class="sb-chip r"><div class="sb-chip-lbl"><div class="sb-dot"></div>Phishing</div><div class="sb-chip-val" id="ss-phish">0</div></div>
+    </div>
+    <div class="sb-sys">
+      <div class="sb-sys-row"><span>Engine</span><span>CNN v2.4</span></div>
+      <div class="sb-sys-row"><span>Uptime</span><span id="uptime">00:00</span></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="pg-hdr fi">
+      <div class="pg-eye">Audit Log</div>
+      <div class="pg-title">Scan <em>History</em></div>
+      <div class="pg-sub">Complete log of all analyzed emails — search, filter, and review past scans</div>
+    </div>
+    <div class="h-stat-row fi1">
+      <div class="h-scard b"><div class="h-scard-val" id="hs-total">0</div><div class="h-scard-lbl">Total Scans</div></div>
+      <div class="h-scard g"><div class="h-scard-val" id="hs-safe">0</div><div class="h-scard-lbl">Safe / Legitimate</div></div>
+      <div class="h-scard y"><div class="h-scard-val" id="hs-susp">0</div><div class="h-scard-lbl">Suspicious / Spam</div></div>
+      <div class="h-scard r"><div class="h-scard-val" id="hs-phish">0</div><div class="h-scard-lbl">Phishing Blocked</div></div>
+    </div>
+    <div class="card fi2">
+      <div class="card-accent"></div>
+      <div class="card-head"><div class="card-head-l"><div class="cdot"></div><div class="card-title">Email Log</div></div><div class="card-meta" id="histCount">0 entries</div></div>
+      <div class="card-body">
+        <div class="tbl-toolbar">
+          <div class="search-wrap"><span class="si">🔍</span><input class="search-inp" type="text" id="histSearch" placeholder="Search emails, labels, content..." oninput="doSearch(this.value)"/></div>
+          <button class="filter-btn on" onclick="doFilter('all',this)">All</button>
+          <button class="filter-btn" onclick="doFilter('safe',this)">✅ Safe</button>
+          <button class="filter-btn" onclick="doFilter('spam',this)">⚠️ Spam</button>
+          <button class="filter-btn" onclick="doFilter('phishing',this)">🚨 Phishing</button>
+          <button class="filter-btn del" onclick="doClear()">🗑 Clear</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Email Snippet</th><th>Classification</th><th>Risk Score</th><th>Timestamp</th><th>Length</th><th>Action</th></tr></thead>
+            <tbody id="histBody"></tbody>
+          </table>
+          <div class="empty-state" id="histEmpty"><div class="empty-icon">📭</div><div class="empty-title">No Records Yet</div>Run your first scan to populate the history log.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const user = requireAuth();
+initTopbar(user,'history');
+renderSideStats(user.id);
+let HIST=getHistory(user.id), _ftype='all', _fq='';
+renderAll();
+function renderAll() {
+  HIST=getHistory(user.id);
+  const safe=HIST.filter(h=>h.label==='safe').length;
+  const susp=HIST.filter(h=>h.label==='spam').length;
+  const phish=HIST.filter(h=>h.label==='phishing').length;
+  document.getElementById('hs-total').textContent=HIST.length;
+  document.getElementById('hs-safe').textContent=safe;
+  document.getElementById('hs-susp').textContent=susp;
+  document.getElementById('hs-phish').textContent=phish;
+  document.getElementById('hBadge').textContent=HIST.length;
+  renderSideStats(user.id);
+  renderTable();
+}
+function renderTable() {
+  let data=HIST;
+  if(_ftype!=='all') data=data.filter(h=>h.label===_ftype);
+  if(_fq) data=data.filter(h=>h.content.toLowerCase().includes(_fq)||h.label.includes(_fq));
+  document.getElementById('histCount').textContent=`${data.length} entries`;
+  const body=document.getElementById('histBody'), empty=document.getElementById('histEmpty');
+  if(!data.length){body.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  const COL={safe:'var(--green)',spam:'var(--yellow)',phishing:'var(--red)'};
+  body.innerHTML=data.map((h,i)=>`
+    <tr onclick="viewRecord(${h.id})">
+      <td style="color:var(--t3);font-size:10px">${i+1}</td>
+      <td class="td-p" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.content.slice(0,75).replace(/</g,'&lt;')}...</td>
+      <td><span class="tag ${h.label}">${h.label}</span></td>
+      <td style="color:${COL[h.label]};font-weight:700;font-family:var(--fd)">${h.riskPct}%</td>
+      <td style="font-size:10px;white-space:nowrap">${h.timestamp}</td>
+      <td style="color:var(--t3)">${h.content.length}c</td>
+      <td><button class="tbl-act" onclick="event.stopPropagation();viewRecord(${h.id})">View →</button></td>
+    </tr>`).join('');
+}
+function doSearch(q){_fq=q.toLowerCase();renderTable();}
+function doFilter(type,btn){_ftype=type;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderTable();}
+function doClear(){
+  if(!confirm('Clear all scan history?')) return;
+  saveHistory(user.id,[]);
+  const s=getStats(user.id); s.safe=0;s.susp=0;s.phish=0; saveStats(user.id,s);
+  renderAll(); toast('History cleared','info');
+}
+function viewRecord(id){const h=HIST.find(x=>x.id===id);if(!h)return;saveResult(h);location.href='result.html';}
+</script>
+</body>
+</html>

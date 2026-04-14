@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MailShieldAI — Analysis Result</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:28px 22px;text-align:center;}
+@media(max-width:1000px){.result-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<script src="script.js"></script>
+<script>injectBg();</script>
+
+<div class="topbar">
+  <div class="tb-logo"><div class="tb-mark">🛡️</div><div class="tb-text">Mail<em>Shield</em>AI</div></div>
+  <div class="tb-sep"></div>
+  <div class="tb-pill"><div class="live-dot"></div>THREAT INTEL LIVE</div>
+  <div class="tb-spacer"></div>
+  <div class="tb-clock" id="tbClock">--:--:--</div>
+  <div class="tb-user"><div class="tb-avatar" id="tbAvatar">A</div><span id="tbName">Analyst</span></div>
+  <button class="tb-logout" onclick="logout()">⏻ LOGOUT</button>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-label">Navigation</div>
+    <a class="nav-link" data-p="dashboard" href="dashboard.html"><span class="ni">📊</span>Dashboard</a>
+    <a class="nav-link" data-p="scan" href="scan.html"><span class="ni">🔍</span>Email Scanner</a>
+    <a class="nav-link active" data-p="result" href="result.html"><span class="ni">🎯</span>Last Result</a>
+    <a class="nav-link" data-p="history" href="history.html"><span class="ni">📋</span>Scan History<span class="nbadge" id="hBadge">0</span></a>
+    <div class="sb-label" style="margin-top:24px">System</div>
+    <a class="nav-link" href="#"><span class="ni">⚙️</span>Settings</a>
+    <div class="sb-stats">
+      <div class="sb-stats-hdr">// Session Stats</div>
+      <div class="sb-chip s"><div class="sb-chip-lbl"><div class="sb-dot"></div>Safe</div><div class="sb-chip-val" id="ss-safe">0</div></div>
+      <div class="sb-chip y"><div class="sb-chip-lbl"><div class="sb-dot"></div>Suspicious</div><div class="sb-chip-val" id="ss-susp">0</div></div>
+      <div class="sb-chip r"><div class="sb-chip-lbl"><div class="sb-dot"></div>Phishing</div><div class="sb-chip-val" id="ss-phish">0</div></div>
+    </div>
+    <div class="sb-sys">
+      <div class="sb-sys-row"><span>Engine</span><span>CNN v2.4</span></div>
+      <div class="sb-sys-row"><span>Uptime</span><span id="uptime">00:00</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="pg-hdr fi">
+      <div class="pg-eye">AI Threat Report</div>
+      <div class="pg-title">Analysis <em>Result</em></div>
+      <div class="pg-sub" id="resultSub">Loading last scan result...</div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="resultEmpty" style="display:none;">
+      <div class="card"><div class="card-body">
+        <div class="empty-state">
+          <div class="empty-icon">🎯</div>
+          <div class="empty-title">No Analysis Yet</div>
+          Run a scan from the Email Scanner to see results here.
+          <br><a href="scan.html" style="color:var(--blue);margin-top:10px;display:inline-block">→ Go to Email Scanner</a>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- Result content -->
+    <div id="resultData" style="display:none;">
+
+      <!-- Alert banner (phishing only) -->
+      <div class="alert-banner fi" id="alertBanner" style="display:none;">
+        <div class="alert-icon">🚨</div>
+        <div>
+          <div class="alert-title">PHISHING ALERT — Critical Threat Detected</div>
+          <div class="alert-sub">Do not click any links or provide credentials. This email has been classified as a phishing attempt.</div>
+        </div>
+      </div>
+
+      <div class="result-grid">
+
+        <!-- LEFT: Gauge -->
+        <div class="fi1">
+          <div class="card">
+            <div class="card-accent" id="rCardAccent"></div>
+            <div class="card-head">
+              <div class="card-head-l"><div class="cdot" id="rDot"></div><div class="card-title">Risk Assessment</div></div>
+              <div class="card-meta" id="rScanId">—</div>
+            </div>
+            <div class="gauge-wrap">
+
+              <!-- SVG Ring -->
+              <div class="gauge-outer">
+                <svg class="gauge-svg" viewBox="0 0 220 220">
+                  <circle class="gauge-bg" cx="110" cy="110" r="95"/>
+                  <circle class="gauge-glow-ring" id="gaugeGlow" cx="110" cy="110" r="95"/>
+                  <circle class="gauge-fill"      id="gaugeFill" cx="110" cy="110" r="95"/>
+                </svg>
+                <div class="gauge-center">
+                  <div class="gauge-pct" id="gaugePct">—</div>
+                  <div class="gauge-lbl">RISK SCORE</div>
+                </div>
+              </div>
+
+              <!-- Classification badge -->
+              <div class="risk-badge" id="rBadge">—</div>
+
+              <!-- Probability bars -->
+              <div style="width:100%">
+                <div class="prob-row">
+                  <div class="prob-hdr"><span style="color:var(--green)">Safe</span><span id="pSafe" style="color:var(--t2)">—</span></div>
+                  <div class="prob-track"><div class="prob-fill s" id="bSafe" style="width:0%"></div></div>
+                </div>
+                <div class="prob-row">
+                  <div class="prob-hdr"><span style="color:var(--yellow)">Suspicious</span><span id="pSusp" style="color:var(--t2)">—</span></div>
+                  <div class="prob-track"><div class="prob-fill y" id="bSusp" style="width:0%"></div></div>
+                </div>
+                <div class="prob-row">
+                  <div class="prob-hdr"><span style="color:var(--red)">Phishing</span><span id="pPhish" style="color:var(--t2)">—</span></div>
+                  <div class="prob-track"><div class="prob-fill r" id="bPhish" style="width:0%"></div></div>
+                </div>
+              </div>
+
+              <!-- Risk pips -->
+              <div style="width:100%;margin-top:18px;">
+                <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;">// Composite Risk Score</div>
+                <div class="pip-row" id="pipRow"></div>
+                <div style="font-size:11px;color:var(--t2);margin-top:8px;" id="pipText">—</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Details -->
+        <div class="result-right fi2">
+
+          <!-- Metadata -->
+          <div class="card">
+            <div class="card-accent"></div>
+            <div class="card-head">
+              <div class="card-head-l"><div class="cdot"></div><div class="card-title">Scan Metadata</div></div>
+              <div class="card-meta">FROM ANALYSIS</div>
+            </div>
+            <div class="card-body"><div class="meta-grid" id="metaGrid"></div></div>
+          </div>
+
+          <!-- Indicators -->
+          <div class="card">
+            <div class="card-accent r"></div>
+            <div class="card-head">
+              <div class="card-head-l"><div class="cdot r"></div><div class="card-title">Detection Indicators</div></div>
+              <div class="card-badge r">AI + RULES</div>
+            </div>
+            <div class="card-body"><div class="ind-list" id="indList"></div></div>
+          </div>
+
+          <!-- Email preview -->
+          <div class="card">
+            <div class="card-accent"></div>
+            <div class="card-head">
+              <div class="card-head-l"><div class="cdot"></div><div class="card-title">Email Preview</div></div>
+              <div class="card-meta">ANALYZED CONTENT</div>
+            </div>
+            <div class="card-body">
+              <div class="email-pre" id="emailPre">—</div>
+              <div class="result-actions">
+                <a href="scan.html"      class="btn btn-blue  btn-sm" style="text-decoration:none;width:auto">🔍 New Scan</a>
+                <a href="history.html"   class="btn btn-green btn-sm" style="text-decoration:none;width:auto">📋 History</a>
+                <a href="dashboard.html" class="btn btn-ghost btn-sm" style="width:auto">📊 Dashboard</a>
+                <button class="btn btn-ghost btn-sm" onclick="exportReport()" style="width:auto">⬇️ Export</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /result-right -->
+      </div><!-- /result-grid -->
+    </div><!-- /resultData -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+const user = requireAuth();
+initTopbar(user, 'result');
+renderSideStats(user.id);
+_set('hBadge', getHistory(user.id).length);
+
+/* ── Render after full paint ── */
+const r = loadResult();
+
+if (!r) {
+  document.getElementById('resultEmpty').style.display = 'block';
+  document.getElementById('resultData').style.display  = 'none';
+} else {
+  document.getElementById('resultEmpty').style.display = 'none';
+  document.getElementById('resultData').style.display  = 'block';
+
+  /* Wait for browser to paint display:block before animating SVG */
+  requestAnimationFrame(() => {
+    setTimeout(() => renderResult(r), 150);
+  });
+}
+
+function renderResult(r) {
+
+  /* subtitle */
+  _set('resultSub', `Scanned at ${r.timestamp} · ${r.content.length} chars`);
+  _set('rScanId',   `#${r.id}`);
+
+  /* color map */
+  const COL = { safe:'var(--green)', spam:'var(--yellow)', phishing:'var(--red)' };
+  const CX  = { safe:'g',           spam:'y',             phishing:'r'          };
+
+  /* alert banner */
+  const ab = document.getElementById('alertBanner');
+  if (ab) ab.style.display = r.label === 'phishing' ? 'flex' : 'none';
+
+  /* card accent + dot */
+  const acc = document.getElementById('rCardAccent');
+  const dot = document.getElementById('rDot');
+  if (acc) acc.className = `card-accent ${CX[r.label]}`;
+  if (dot) dot.className = `cdot ${CX[r.label]}`;
+
+  /* ── SVG Gauge ── */
+  const gFill = document.getElementById('gaugeFill');
+  const gGlow = document.getElementById('gaugeGlow');
+  const gPct  = document.getElementById('gaugePct');
+
+  if (gFill && gGlow) {
+    gFill.className = `gauge-fill ${r.label}`;
+    gGlow.className = `gauge-glow-ring ${r.label}`;
+
+    /* Force a reflow so the transition plays from 597 → target */
+    gFill.style.strokeDashoffset = '597';
+    gGlow.style.strokeDashoffset = '597';
+    gFill.getBoundingClientRect(); /* trigger reflow */
+
+    const C = 597;
+    const offset = C - (r.riskPct / 100) * C;
+
+    setTimeout(() => {
+      gFill.style.strokeDashoffset = offset;
+      gGlow.style.strokeDashoffset = offset;
+    }, 50);
+  }
+
+  if (gPct) {
+    gPct.textContent  = r.riskPct + '%';
+    gPct.style.color  = COL[r.label];
+  }
+
+  /* badge */
+  const badge = document.getElementById('rBadge');
+  if (badge) {
+    badge.className   = `risk-badge ${r.label}`;
+    badge.textContent = r.label.toUpperCase();
+  }
+
+  /* prob bars */
+  _set('pSafe',  r.pSafe  + '%');
+  _set('pSusp',  r.pSusp  + '%');
+  _set('pPhish', r.pPhish + '%');
+
+  setTimeout(() => {
+    const bs = document.getElementById('bSafe');
+    const by = document.getElementById('bSusp');
+    const br = document.getElementById('bPhish');
+    if (bs) bs.style.width = r.pSafe  + '%';
+    if (by) by.style.width = r.pSusp  + '%';
+    if (br) br.style.width = r.pPhish + '%';
+  }, 200);
+
+  /* risk pips */
+  const prow = document.getElementById('pipRow');
+  if (prow) {
+    const MAX = 10;
+    const sc  = Math.min(Math.round(r.riskPct / 10), MAX);
+    const pc  = CX[r.label];
+    prow.innerHTML = Array.from({ length: MAX }, (_, i) =>
+      `<div class="pip ${i < sc ? pc : ''}" style="transition-delay:${i * 55}ms"></div>`
+    ).join('');
+  }
+
+  const ptxt = document.getElementById('pipText');
+  if (ptxt) {
+    const lab = r.riskPct >= 70 ? '🚨 Critical' : r.riskPct >= 40 ? '⚠️ Elevated' : '✅ Low';
+    ptxt.innerHTML = `${lab} — Score <b style="color:${COL[r.label]}">${r.riskPct}</b>/100`;
+  }
+
+  /* metadata grid */
+  const mg = document.getElementById('metaGrid');
+  if (mg) mg.innerHTML = `
+    <div class="meta-item">
+      <div class="meta-key">Classification</div>
+      <div class="meta-val" style="color:${COL[r.label]}">${r.label.toUpperCase()}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-key">Risk Score</div>
+      <div class="meta-val" style="color:${COL[r.label]}">${r.riskPct}%</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-key">Content Length</div>
+      <div class="meta-val">${r.content.length} chars</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-key">AI Engine</div>
+      <div class="meta-val">CNN v2.4</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-key">Scan ID</div>
+      <div class="meta-val" style="font-size:11px;color:var(--t2)">#${r.id}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-key">Analyst</div>
+      <div class="meta-val" style="font-size:11px;color:var(--t2)">${user.name}</div>
+    </div>
+  `;
+
+  /* indicators */
+  const il = document.getElementById('indList');
+  if (il) il.innerHTML = (r.indicators || []).map((ind, i) => `
+    <div class="ind-item ${ind.type}" style="animation-delay:${i * 70}ms">
+      <span class="ind-icon">${ind.icon}</span>
+      <span class="ind-text">${ind.text}</span>
+      <span class="ind-sev ${ind.sev}">${ind.sev}</span>
+    </div>`).join('');
+
+  /* email preview */
+  const ep = document.getElementById('emailPre');
+  if (ep) ep.textContent = r.content.slice(0, 1000) + (r.content.length > 1000 ? '\n...[truncated]' : '');
+}
+</script>
+</body>
+</html>

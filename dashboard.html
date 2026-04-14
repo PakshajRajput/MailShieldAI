@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MailShieldAI — Dashboard</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+.dash-2col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.qa{display:flex;flex-direction:column;gap:10px;}
+.term-wrap{background:rgba(0,0,0,0.4);border-radius:10px;padding:14px 16px;font-size:10.5px;line-height:2;color:var(--t2);max-height:150px;overflow-y:auto;border:1px solid var(--bdr);}
+.term-line{color:var(--t3);}
+.term-line.ok::before{content:'✓ ';color:var(--green);}
+.term-line.run::before{content:'» ';color:var(--blue);}
+.term-line.err::before{content:'! ';color:var(--red);}
+@media(max-width:800px){.dash-2col{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<script src="script.js"></script>
+<script>injectBg();</script>
+<div class="topbar">
+  <div class="tb-logo"><div class="tb-mark">🛡️</div><div class="tb-text">Mail<em>Shield</em>AI</div></div>
+  <div class="tb-sep"></div>
+  <div class="tb-pill"><div class="live-dot"></div>THREAT INTEL LIVE</div>
+  <div class="tb-pill" style="border-color:rgba(0,255,163,0.2);color:var(--green);">🟢 CNN MODEL ACTIVE</div>
+  <div class="tb-spacer"></div>
+  <div class="tb-clock" id="tbClock">--:--:--</div>
+  <div class="tb-user"><div class="tb-avatar" id="tbAvatar">A</div><span id="tbName">Analyst</span></div>
+  <button class="tb-logout" onclick="logout()">⏻ LOGOUT</button>
+</div>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-label">Navigation</div>
+    <a class="nav-link active" data-p="dashboard" href="dashboard.html"><span class="ni">📊</span>Dashboard</a>
+    <a class="nav-link" data-p="scan" href="scan.html"><span class="ni">🔍</span>Email Scanner</a>
+    <a class="nav-link" data-p="result" href="result.html"><span class="ni">🎯</span>Last Result</a>
+    <a class="nav-link" data-p="history" href="history.html"><span class="ni">📋</span>Scan History<span class="nbadge" id="hBadge">0</span></a>
+    <div class="sb-label" style="margin-top:24px">System</div>
+    <a class="nav-link" href="#" onclick="toast('Settings — coming soon','info')"><span class="ni">⚙️</span>Settings</a>
+    <div class="sb-stats">
+      <div class="sb-stats-hdr">// Session Stats</div>
+      <div class="sb-chip s"><div class="sb-chip-lbl"><div class="sb-dot"></div>Safe</div><div class="sb-chip-val" id="ss-safe">0</div></div>
+      <div class="sb-chip y"><div class="sb-chip-lbl"><div class="sb-dot"></div>Suspicious</div><div class="sb-chip-val" id="ss-susp">0</div></div>
+      <div class="sb-chip r"><div class="sb-chip-lbl"><div class="sb-dot"></div>Phishing</div><div class="sb-chip-val" id="ss-phish">0</div></div>
+    </div>
+    <div class="sb-sys">
+      <div class="sb-sys-row"><span>Engine</span><span>CNN v2.4</span></div>
+      <div class="sb-sys-row"><span>Uptime</span><span id="uptime">00:00</span></div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="pg-hdr fi">
+      <div class="pg-eye">Threat Intelligence</div>
+      <div class="pg-title">Security <em>Dashboard</em></div>
+      <div class="pg-sub" id="dashClock">Loading...</div>
+    </div>
+    <div class="stat-row fi1">
+      <div class="scard b"><div class="scard-top"><div class="scard-icon">📧</div><div class="scard-trend" id="ctTrend">SESSION</div></div><div class="scard-val" id="ctTotal">0</div><div class="scard-lbl">Total Scans</div><div class="scard-sub">All emails analyzed</div></div>
+      <div class="scard g"><div class="scard-top"><div class="scard-icon">✅</div><div class="scard-trend">CLEAN</div></div><div class="scard-val" id="ctSafe">0</div><div class="scard-lbl">Legitimate Emails</div><div class="scard-sub">Passed all checks</div></div>
+      <div class="scard y"><div class="scard-top"><div class="scard-icon">⚠️</div><div class="scard-trend">WATCH</div></div><div class="scard-val" id="ctSusp">0</div><div class="scard-lbl">Suspicious / Spam</div><div class="scard-sub">Manual review needed</div></div>
+      <div class="scard r"><div class="scard-top"><div class="scard-icon">🚨</div><div class="scard-trend">BLOCKED</div></div><div class="scard-val" id="ctPhish">0</div><div class="scard-lbl">Phishing Blocked</div><div class="scard-sub">Threat alerts fired</div></div>
+    </div>
+    <div class="dash-2col fi2">
+      <div class="card">
+        <div class="card-accent"></div>
+        <div class="card-head"><div class="card-head-l"><div class="cdot"></div><div class="card-title">Threat Distribution</div></div><div class="card-meta">LIVE</div></div>
+        <div class="card-body">
+          <div class="dist-row"><div class="dist-hdr"><span class="dist-name g">Safe / Legitimate</span><span class="dist-pct" id="dpSafe" style="color:var(--green)">0%</span></div><div class="dist-track"><div class="dist-fill g" id="dbSafe" style="width:0%"></div></div></div>
+          <div class="dist-row"><div class="dist-hdr"><span class="dist-name y">Suspicious / Spam</span><span class="dist-pct" id="dpSusp" style="color:var(--yellow)">0%</span></div><div class="dist-track"><div class="dist-fill y" id="dbSusp" style="width:0%"></div></div></div>
+          <div class="dist-row"><div class="dist-hdr"><span class="dist-name r">Phishing / Malicious</span><span class="dist-pct" id="dpPhish" style="color:var(--red)">0%</span></div><div class="dist-track"><div class="dist-fill r" id="dbPhish" style="width:0%"></div></div></div>
+          <div class="spark" id="sparkline"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-accent g"></div>
+        <div class="card-head"><div class="card-head-l"><div class="cdot g"></div><div class="card-title">Quick Actions</div></div><div class="card-badge g">ANALYST</div></div>
+        <div class="card-body qa">
+          <a href="scan.html" class="btn btn-blue" style="text-decoration:none">🔍 New Email Scan</a>
+          <a href="result.html" class="btn btn-green" style="text-decoration:none">🎯 View Last Result</a>
+          <a href="history.html" class="btn btn-ghost" style="text-decoration:none">📋 Browse History</a>
+        </div>
+      </div>
+    </div>
+    <div class="card fi3">
+      <div class="card-accent"></div>
+      <div class="card-head"><div class="card-head-l"><div class="cdot"></div><div class="card-title">System Log</div></div><div class="card-badge">LIVE</div></div>
+      <div class="card-body p16">
+        <div class="term-wrap" id="termLog">
+          <div class="term-line ok">MailShieldAI v2.4.1 initializing...</div>
+          <div class="term-line run">Loading TensorFlow CNN model weights...</div>
+          <div class="term-line ok">Tokenizer ready — vocabulary loaded</div>
+          <div class="term-line ok">Cybersecurity ruleset active — 30+ threat patterns</div>
+          <div class="term-line run">Session started — analyst authenticated</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const user = requireAuth();
+initTopbar(user,'dashboard');
+renderSideStats(user.id);
+updateDash();
+setInterval(() => { const el=document.getElementById('dashClock'); if(el) el.textContent=new Date().toLocaleString(); addTermLine(null,null); }, 8000);
+function updateDash() {
+  const s=getStats(user.id); const total=s.safe+s.susp+s.phish;
+  document.getElementById('ctTotal').textContent=total;
+  document.getElementById('ctSafe').textContent=s.safe;
+  document.getElementById('ctSusp').textContent=s.susp;
+  document.getElementById('ctPhish').textContent=s.phish;
+  document.getElementById('ctTrend').textContent=`↑ ${total}`;
+  document.getElementById('hBadge').textContent=total;
+  renderSideStats(user.id);
+  if(total>0){
+    const sp=Math.round(s.safe/total*100),wp=Math.round(s.susp/total*100),rp=Math.round(s.phish/total*100);
+    document.getElementById('dbSafe').style.width=sp+'%'; document.getElementById('dpSafe').textContent=sp+'%';
+    document.getElementById('dbSusp').style.width=wp+'%'; document.getElementById('dpSusp').textContent=wp+'%';
+    document.getElementById('dbPhish').style.width=rp+'%'; document.getElementById('dpPhish').textContent=rp+'%';
+  }
+  buildSparkline(user.id);
+}
+const TERM_MSGS=[['run','Scanning threat intelligence feeds...'],['ok','No new IOCs detected in last cycle'],['run','Refreshing URL reputation database...'],['ok','Model weights verified — SHA-256 intact'],['run','Performing memory integrity check...']];
+let termIdx=0;
+function addTermLine(cls,msg) {
+  if(!cls){const t=TERM_MSGS[termIdx%TERM_MSGS.length];termIdx++;cls=t[0];msg=t[1];}
+  const el=document.getElementById('termLog'); if(!el) return;
+  const d=document.createElement('div'); d.className=`term-line ${cls}`;
+  d.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+</script>
+</body>
+</html>

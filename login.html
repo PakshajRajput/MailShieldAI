@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MailShieldAI — Secure Login</title>
+<link rel="stylesheet" href="style.css"/>
+<style>
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.login-radar{position:absolute;width:720px;height:720px;border-radius:50%;border:1px solid rgba(0,212,255,0.06);animation:radarSpin 22s linear infinite;pointer-events:none;}
+.login-radar::before{content:'';position:absolute;inset:70px;border-radius:50%;border:1px solid rgba(0,212,255,0.04);}
+.login-radar::after{content:'';position:absolute;inset:155px;border-radius:50%;border:1px solid rgba(0,212,255,0.03);}
+@keyframes radarSpin{to{transform:rotate(360deg);}}
+.login-sweep{position:absolute;width:720px;height:720px;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,rgba(0,212,255,0.0),rgba(0,212,255,0.07) 28deg,rgba(0,212,255,0.0) 56deg,transparent 56deg);animation:sweepSpin 4s linear infinite;}
+@keyframes sweepSpin{to{transform:rotate(360deg);}}
+.login-shell{position:relative;z-index:2;display:grid;grid-template-columns:1fr 420px;width:880px;min-height:550px;background:var(--glass2);border:1px solid var(--bdr3);border-radius:24px;overflow:hidden;box-shadow:var(--glow-b),0 40px 80px rgba(0,0,0,0.65),inset 0 1px 0 rgba(255,255,255,0.04);backdrop-filter:blur(30px) saturate(180%);animation:loginEntrance .8s var(--spring);}
+@keyframes loginEntrance{from{opacity:0;transform:translateY(40px) scale(.95);}to{opacity:1;transform:translateY(0) scale(1);}}
+.login-shell::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue),var(--green),transparent);animation:accentPulse 2.5s ease-in-out infinite;z-index:3;}
+@keyframes accentPulse{0%,100%{opacity:.5;}50%{opacity:1;}}
+.ll{background:linear-gradient(135deg,rgba(0,212,255,0.04),rgba(0,255,163,0.02));border-right:1px solid var(--bdr);padding:50px 44px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+.ll::before{content:'';position:absolute;top:-80px;right:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,0.08),transparent 70%);animation:orbDrift 8s ease-in-out infinite;}
+.ll::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(0,255,163,0.06),transparent 70%);animation:orbDrift 11s ease-in-out infinite reverse;}
+.ll-logo{display:flex;align-items:center;gap:14px;margin-bottom:36px;}
+.ll-icon{width:50px;height:50px;border-radius:15px;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--glow-b);position:relative;overflow:hidden;}
+.ll-icon::before{content:'';position:absolute;inset:-50%;background:conic-gradient(transparent 30%,rgba(255,255,255,0.18),transparent 70%);animation:iconSpin 3s linear infinite;}
+.ll-wm{font-family:var(--fd);font-size:26px;font-weight:900;letter-spacing:-.5px;}
+.ll-wm em{color:var(--blue);font-style:normal;}
+.ll-headline{font-family:var(--fd);font-size:30px;font-weight:900;line-height:1.2;letter-spacing:-1px;margin-bottom:14px;}
+.ll-headline em{color:var(--blue);font-style:normal;}
+.ll-desc{font-size:12px;color:var(--t2);line-height:1.85;margin-bottom:32px;}
+.ll-feats{display:flex;flex-direction:column;gap:10px;}
+.ll-feat{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:11px;background:rgba(0,212,255,0.04);border:1px solid var(--bdr);font-size:11.5px;color:var(--t2);transition:all .2s;}
+.ll-feat:hover{border-color:rgba(0,212,255,0.2);transform:translateX(3px);}
+.ll-feat-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(0,212,255,0.1);font-size:14px;flex-shrink:0;}
+.ll-ver{font-size:9.5px;color:var(--t3);letter-spacing:1.5px;margin-top:28px;}
+.lr{padding:50px 42px;display:flex;flex-direction:column;justify-content:center;}
+.lr-eye{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.lr-eye::before{content:'//';color:var(--blue);}
+.lr-title{font-family:var(--fd);font-size:26px;font-weight:900;margin-bottom:5px;letter-spacing:-.5px;}
+.lr-sub{font-size:12px;color:var(--t2);margin-bottom:28px;}
+.lr-term{background:rgba(0,0,0,0.4);border:1px solid var(--bdr);border-radius:8px;padding:8px 14px;font-size:10px;color:var(--t3);margin-bottom:24px;display:flex;align-items:center;gap:8px;}
+.lr-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:livePulse 1.5s ease infinite;flex-shrink:0;}
+.lb-field{margin-bottom:18px;}
+.lb-field label{display:block;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--t2);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.lb-field label::before{content:'//';color:var(--blue);font-size:9px;}
+.lb-field .inp-wrap{position:relative;}
+.lb-field .inp-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--t3);pointer-events:none;transition:color .2s;}
+.lb-field input:focus + span{color:var(--blue);}
+.lb-btn{width:100%;padding:14px;margin-bottom:10px;background:linear-gradient(135deg,rgba(0,212,255,0.14),rgba(0,255,163,0.09));border:1px solid rgba(0,212,255,0.5);border-radius:12px;color:var(--blue);font-family:var(--fd);font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;position:relative;overflow:hidden;cursor:pointer;transition:all .25s var(--ease);}
+.lb-btn::after{content:'';position:absolute;top:0;left:-80%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);transition:left .6s var(--ease);}
+.lb-btn:hover{box-shadow:var(--glow-b);transform:translateY(-2px);}
+.lb-btn:hover::after{left:130%;}
+.lb-btn:active{transform:translateY(0);}
+.lb-demo{text-align:center;font-size:11px;color:var(--t3);}
+.lb-demo span{color:var(--blue);cursor:pointer;border-bottom:1px dashed rgba(0,212,255,0.4);}
+.lb-demo span:hover{color:var(--green);}
+.lb-err{color:var(--red);font-size:11px;margin-bottom:10px;padding:8px 12px;background:rgba(255,45,85,0.07);border-radius:8px;border:1px solid rgba(255,45,85,0.2);display:none;}
+.lb-secure{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;padding:10px;border:1px solid var(--bdr);border-radius:9px;font-size:9px;color:var(--t3);letter-spacing:1px;}
+</style>
+</head>
+<body>
+<script src="script.js"></script>
+<script>injectBg();</script>
+<div class="login-radar"></div>
+<div class="login-sweep"></div>
+<div class="login-shell">
+  <div class="ll">
+    <div>
+      <div class="ll-logo"><div class="ll-icon">🛡️</div><div class="ll-wm">Mail<em>Shield</em>AI</div></div>
+      <div class="ll-headline">Next-Gen<br><em>Phishing</em><br>Defense</div>
+      <div class="ll-desc">AI-powered email threat intelligence platform. Real-time CNN analysis combined with a cybersecurity rule engine and SHA-256 audit logging.</div>
+      <div class="ll-feats">
+        <div class="ll-feat fi1"><div class="ll-feat-icon">🧠</div>TensorFlow CNN — max_len=100 tokenizer</div>
+        <div class="ll-feat fi2"><div class="ll-feat-icon">🔗</div>URL forensics · TLD reputation · shortener detection</div>
+        <div class="ll-feat fi3"><div class="ll-feat-icon">⚡</div>Real-time composite risk scoring engine</div>
+        <div class="ll-feat fi4"><div class="ll-feat-icon">🔒</div>SHA-256 hashing · per-analyst audit trail</div>
+      </div>
+    </div>
+    <div class="ll-ver">// MailShieldAI v2.4.1 · Build 20250322</div>
+  </div>
+  <div class="lr">
+    <div class="lr-eye">Secure Access Portal</div>
+    <div class="lr-title">Initialize Session</div>
+    <div class="lr-sub">Enter your analyst credentials to access the dashboard</div>
+    <div class="lr-term"><div class="lr-dot"></div>System ready — CNN model loaded · SHA-256 active · TLS 1.3</div>
+    <div class="lb-field">
+      <label>Analyst ID</label>
+      <div class="inp-wrap"><input class="inp" id="loginUser" type="text" placeholder="analyst@organization.com" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"/><span>👤</span></div>
+    </div>
+    <div class="lb-field">
+      <label>Access Key</label>
+      <div class="inp-wrap"><input class="inp" id="loginPass" type="password" placeholder="••••••••••••" onkeydown="if(event.key==='Enter')doLogin()"/><span>🔑</span></div>
+    </div>
+    <div class="lb-err" id="loginErr">⚠️ Fill in both fields with a valid email.</div>
+    <button class="lb-btn" onclick="doLogin()">⚡ Initialize Session</button>
+    <div class="lb-demo">Demo access → <span onclick="fillDemo()">load credentials</span></div>
+    <div class="lb-secure"><div class="lr-dot" style="width:4px;height:4px;"></div>AES-256 · TLS 1.3 ENCRYPTED · SHA-256 HASHING</div>
+  </div>
+</div>
+<script>
+if (getUser()) location.href = 'dashboard.html';
+function fillDemo() {
+  document.getElementById('loginUser').value = 'analyst@mailshield.ai';
+  document.getElementById('loginPass').value = 'demo1234';
+}
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  const err = document.getElementById('loginErr');
+  if (!u || !p || !u.includes('@')) { err.style.display='block'; return; }
+  err.style.display='none';
+  const name = u.split('@')[0];
+  const user = { id:u.replace(/[^a-z0-9]/gi,'_'), name, email:u };
+  localStorage.setItem('msa_user', JSON.stringify(user));
+  toast(`Welcome, ${name}!`,'success');
+  setTimeout(() => { location.href='dashboard.html'; }, 700);
+}
+</script>
+</body>
+</html>
